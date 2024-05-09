@@ -72,7 +72,7 @@ label: Scraping wikipedia.org about south Italy
 source:
   plugin: php_scraper
 
-  links_list: 'fixtures/wiki_links.txt'
+  links_file: 'fixtures/wiki_links.txt'
 
   fields:
     title:
