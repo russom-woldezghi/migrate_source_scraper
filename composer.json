@@ -1,0 +1,24 @@
+{
+    "name": "drupal/migrate_source_scraper",
+    "description": "Embeds php_scraper migrate plugin source that allows content importing via web scraping using Symfony's BrowserKit",
+    "type": "drupal-module",
+    "license": "GPL-2.0-or-later",
+    "authors": [
+        {
+            "name": "Nino Marrazzo (reinchek)",
+            "homepage": "https://www.drupal.org/u/reinchek",
+            "role": "Maintainer"
+        }
+    ],
+    "homepage": "https://drupal.org/project/migrate_source_scraper",
+    "support": {
+        "issues": "https://drupal.org/project/issues/migrate_source_scraper",
+        "source": "https://git.drupalcode.org/project/migrate_source_scraper"
+    },
+    "require": {
+        "symfony/browser-kit": "^6.4",
+        "symfony/dom-crawler": "^5.4",
+        "symfony/http-client": "^5.4"
+    },
+    "minimum-stability": "dev"
+}

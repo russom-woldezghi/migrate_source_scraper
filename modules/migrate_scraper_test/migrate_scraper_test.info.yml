@@ -1,0 +1,4 @@
+name: Migrate Source Scraper (test)
+type: module
+core_version_requirement: ^9 || ^10 || ^11
+description: '(migrate_source_scraper) Adds a migration for testing the scraper. Imports some test data from wikipedia.org and saves it in article nodes.'

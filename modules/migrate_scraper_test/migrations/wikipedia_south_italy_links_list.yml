@@ -1,0 +1,41 @@
+id: wikipedia_south_italy_links_list
+label: Scraping wikipedia.org about south Italy (links comes from list in config)
+
+source:
+  plugin: php_scraper
+
+  links_list:
+    - 'https://en.wikipedia.org/wiki/Diego_Maradona'
+    - 'https://en.wikipedia.org/wiki/SSC_Napoli'
+    - 'https://en.wikipedia.org/wiki/Naples'
+    - 'https://en.wikipedia.org/wiki/Royal_Palace_of_Caserta'
+    - 'https://en.wikipedia.org/wiki/Southern_Italy'
+    - 'https://en.wikipedia.org/wiki/Amalfi_Coast'
+
+  fields:
+    title:
+      xpath: '//*[@id="firstHeading"]'
+      get: text
+    body:
+      selector: '#bodyContent'
+      get: outerHtml
+  ids:
+    - id
+
+process:
+  body/value: body
+  body/format:
+    plugin: default_value
+    default_value: full_html
+  title:
+    -
+      plugin: callback
+      callable: strip_tags
+      source: title
+    -
+      plugin: default_value
+      default_value: 'No title'
+
+destination:
+  plugin: entity:node
+  default_bundle: article

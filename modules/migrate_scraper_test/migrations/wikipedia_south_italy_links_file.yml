@@ -1,0 +1,35 @@
+id: wikipedia_south_italy_links_file
+label: Scraping wikipedia.org about south Italy (links comes from file)
+
+source:
+  plugin: php_scraper
+
+  links_file: 'fixtures/wiki_links.txt'
+
+  fields:
+    title:
+      xpath: '//*[@id="firstHeading"]'
+      get: text
+    body:
+      selector: '#bodyContent'
+      get: outerHtml
+  ids:
+    - id
+
+process:
+  body/value: body
+  body/format:
+    plugin: default_value
+    default_value: full_html
+  title:
+    -
+      plugin: callback
+      callable: strip_tags
+      source: title
+    -
+      plugin: default_value
+      default_value: 'No title'
+
+destination:
+  plugin: entity:node
+  default_bundle: article
