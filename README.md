@@ -8,6 +8,7 @@ After installation, you can configure the scraping source by defining the necess
 
 ### Options
 - **links_list**: A list of URLs to scrape content from.
+- **links_file**: The path (relative to the module where the migration is defined) of the file containing URLs to scrape. Each URL should be listed on a separate line. Can be used as an alternative to **links_list**, but only if **links_list is not defined**.
 - **fields**: Defines the fields to scrape and specify the scraping method for each field.
   - For fields, you can define two types of filters: XPath (**xpath**) or CSS selector (**selector**).
     - **selector**: to use CSS selector as filter method;
