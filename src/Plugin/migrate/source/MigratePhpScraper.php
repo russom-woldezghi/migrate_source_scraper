@@ -5,6 +5,7 @@ namespace Drupal\migrate_source_scraper\Plugin\migrate\source;
 use Drupal\migrate\Plugin\migrate\source\SourcePluginBase;
 use Drupal\migrate\Plugin\MigrationInterface;
 use Drupal\migrate_source_scraper\ScrapingClient;
+use Symfony\Component\DomCrawler\Crawler;
 
 /**
  * Source plugin for PHP scraper.
@@ -85,17 +86,31 @@ class MigratePhpScraper extends SourcePluginBase {
       // use the appropriate method to extract the data.
       foreach ($this->configuration['fields'] as $fieldName => $filter) {
         $methodGet = $filter['get'] ?? 'text';
+        $multiple = $filter['multiple'] ?? false;
+        $keyVal = $filter['key'] ?? 'id';
 
         $filterType = array_key_first($filter);
-
-        $items[$key]['id'] = $link;
-        $items[$key][$fieldName] = match ($filterType) {
-          'xpath' => $crawler->filterXPath($filter['xpath'])->$methodGet(),
-          'selector' => $crawler->filter($filter['selector'])->$methodGet(),
+        $filter = match ($filterType) {
+          'xpath' => $crawler->filterXPath($filter['xpath']),
+          'selector' => $crawler->filter($filter['selector']),
           // If the filter type is not supported, throw an exception.
           default => throw new \InvalidArgumentException(
             "Unsupported filter type: $filterType." .
             "Supported filter types are: xpath, selector."
+          ),
+        };
+
+        $items[$key]['id'] = $link;
+        $items[$key][$fieldName] = match ($multiple) {
+          true => $filter->each(function (Crawler $parentCrawler) use ($keyVal, $methodGet) : array {
+            return [
+              $keyVal => $parentCrawler->$methodGet(),
+            ];
+          }),
+          false => $filter->$methodGet(),
+          default => throw new \InvalidArgumentException(
+            "Unsupported multiple flag: $multiple." .
+            "Supported multiple flag is either: true, false."
           ),
         };
       }
