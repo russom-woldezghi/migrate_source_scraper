@@ -18,7 +18,8 @@
     "require": {
         "symfony/browser-kit": "^6.4",
         "symfony/dom-crawler": "^5.4 || ^6",
-        "symfony/http-client": "^5.4 || ^6"
+        "symfony/http-client": "^5.4 || ^6",
+        "symfony/css-selector": "^5.4 || ^6"
     },
     "minimum-stability": "dev"
 }

@@ -4,6 +4,7 @@ namespace Drupal\migrate_source_scraper\Plugin\migrate\source;
 
 use Drupal\migrate\Plugin\migrate\source\SourcePluginBase;
 use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\migrate_source_scraper\Exception\PluginErrorException;
 use Drupal\migrate_source_scraper\ScrapingClient;
 use Symfony\Component\DomCrawler\Crawler;
 
@@ -23,13 +24,13 @@ class MigratePhpScraper extends SourcePluginBase {
    */
   public function __construct(array $configuration, $plugin_id, $plugin_definition, MigrationInterface $migration) {
     if (!empty($configuration['links_file']) && !empty($configuration['links_list'])) {
-      throw new \InvalidArgumentException(
+      throw new PluginErrorException(
         'The "links_file" and "links_list" options are mutually exclusive for the "php_scraper" source.'
       );
     }
 
     if (empty($configuration['links_list']) && empty($configuration['links_file'])) {
-      throw new \InvalidArgumentException(
+      throw new PluginErrorException(
         'The "links_list" or "links_file" option must be specified for the "php_scraper" source.'
       );
     }
@@ -94,7 +95,7 @@ class MigratePhpScraper extends SourcePluginBase {
           'xpath' => $crawler->filterXPath($filter['xpath']),
           'selector' => $crawler->filter($filter['selector']),
           // If the filter type is not supported, throw an exception.
-          default => throw new \InvalidArgumentException(
+          default => throw new PluginErrorException(
             "Unsupported filter type: $filterType." .
             "Supported filter types are: xpath, selector."
           ),
@@ -108,7 +109,7 @@ class MigratePhpScraper extends SourcePluginBase {
             ];
           }),
           false => $filter->$methodGet(),
-          default => throw new \InvalidArgumentException(
+          default => throw new PluginErrorException(
             "Unsupported multiple flag: $multiple." .
             "Supported multiple flag is either: true, false."
           ),
