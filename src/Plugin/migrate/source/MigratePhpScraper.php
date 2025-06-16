@@ -91,29 +91,34 @@ class MigratePhpScraper extends SourcePluginBase {
         $keyVal = $filter['key'] ?? 'id';
 
         $filterType = array_key_first($filter);
-        $filter = match ($filterType) {
-          'xpath' => $crawler->filterXPath($filter['xpath']),
-          'selector' => $crawler->filter($filter['selector']),
-          // If the filter type is not supported, throw an exception.
-          default => throw new PluginErrorException(
-            "Unsupported filter type: $filterType." .
-            "Supported filter types are: xpath, selector."
-          ),
-        };
 
-        $items[$key]['id'] = $link;
-        $items[$key][$fieldName] = match ($multiple) {
-          true => $filter->each(function (Crawler $parentCrawler) use ($keyVal, $methodGet) : array {
-            return [
-              $keyVal => $parentCrawler->$methodGet(),
-            ];
-          }),
-          false => $filter->$methodGet(),
-          default => throw new PluginErrorException(
-            "Unsupported multiple flag: $multiple." .
-            "Supported multiple flag is either: true, false."
-          ),
-        };
+        try {
+          $filter = match ($filterType) {
+            'xpath' => $crawler->filterXPath($filter['xpath']),
+            'selector' => $crawler->filter($filter['selector']),
+            // If the filter type is not supported, throw an exception.
+            default => throw new PluginErrorException(
+              "Unsupported filter type: $filterType." .
+              "Supported filter types are: xpath, selector."
+            ),
+          };
+
+          $items[$key]['id'] = $link;
+          $items[$key][$fieldName] = match ($multiple) {
+            true => $filter->each(function (Crawler $parentCrawler) use ($keyVal, $methodGet): array {
+              return [
+                $keyVal => $parentCrawler->$methodGet(),
+              ];
+            }),
+            false => $filter->$methodGet(),
+            default => throw new PluginErrorException(
+              "Unsupported multiple flag: $multiple." .
+              "Supported multiple flag is either: true, false."
+            ),
+          };
+        } catch (\InvalidArgumentException $e) {
+          \Drupal::logger('migrate_source_scraper')->error($e->getMessage());
+        }
       }
     }
 
