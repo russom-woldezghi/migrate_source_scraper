@@ -4,6 +4,7 @@ namespace Drupal\migrate_source_scraper\Plugin\migrate\source;
 
 use Drupal\migrate\Plugin\migrate\source\SourcePluginBase;
 use Drupal\migrate\Plugin\MigrationInterface;
+use Drupal\migrate\Row;
 use Drupal\migrate_source_scraper\Exception\PluginErrorException;
 use Drupal\migrate_source_scraper\ScrapingClient;
 use Symfony\Component\DomCrawler\Crawler;
@@ -64,65 +65,76 @@ class MigratePhpScraper extends SourcePluginBase {
    * {@inheritDoc}
    */
   protected function initializeIterator() {
-    // Init ScrapingClient instance.
-    $scraper = new ScrapingClient();
-
-    $linksIterator = new \ArrayIterator([]);
 
     if (!empty($this->configuration['links_list'])) {
       $linksIterator = new \ArrayIterator($this->configuration['links_list']);
-    } else {
+    }
+    else {
       // Read links from file.
       $linksIterator = $this->readLinksFromFile();
     }
 
-    // Collect data from each link and store them in an array.
+    // Store them in an array.
     $items = [];
     // Iterate through the links.
     foreach ($linksIterator as $key => $link) {
-      // Crawl the link.
-      $crawler = $scraper->request('GET', trim($link));
-
-      // Iterate through the fields in the configuration and
-      // use the appropriate method to extract the data.
-      foreach ($this->configuration['fields'] as $fieldName => $filter) {
-        $methodGet = $filter['get'] ?? 'text';
-        $multiple = $filter['multiple'] ?? false;
-        $keyVal = $filter['key'] ?? 'id';
-
-        $filterType = array_key_first($filter);
-
-        try {
-          $filter = match ($filterType) {
-            'xpath' => $crawler->filterXPath($filter['xpath']),
-            'selector' => $crawler->filter($filter['selector']),
-            // If the filter type is not supported, throw an exception.
-            default => throw new PluginErrorException(
-              "Unsupported filter type: $filterType." .
-              "Supported filter types are: xpath, selector."
-            ),
-          };
-
-          $items[$key]['id'] = $link;
-          $items[$key][$fieldName] = match ($multiple) {
-            true => $filter->each(function (Crawler $parentCrawler) use ($keyVal, $methodGet): array {
-              return [
-                $keyVal => $parentCrawler->$methodGet(),
-              ];
-            }),
-            false => $filter->$methodGet(),
-            default => throw new PluginErrorException(
-              "Unsupported multiple flag: $multiple." .
-              "Supported multiple flag is either: true, false."
-            ),
-          };
-        } catch (\InvalidArgumentException $e) {
-          \Drupal::logger('migrate_source_scraper')->error($e->getMessage());
-        }
-      }
+      $items[$key]['id'] = $link;
     }
 
     return new \ArrayIterator($items);
+  }
+
+  /**
+   * {@inheritDoc}
+   * @throws \Exception
+   */
+  public function prepareRow(Row $row) {
+    // The id is the link.
+    $link = $row->getSourceProperty('id');
+
+    // Init ScrapingClient instance.
+    $scraper = new ScrapingClient();
+
+    // Crawl the link.
+    $crawler = $scraper->request('GET', trim($link));
+
+    // Iterate through the fields in the configuration and
+    // use the appropriate method to extract the data.
+    foreach ($this->configuration['fields'] as $fieldName => $filter) {
+      $methodGet = $filter['get'] ?? 'text';
+      $multiple = $filter['multiple'] ?? false;
+      $keyVal = $filter['key'] ?? 'id';
+
+      $filterType = array_key_first($filter);
+
+      try {
+        // Crawl the row link and collect values.
+        $filter = match ($filterType) {
+          'xpath' => $crawler->filterXPath($filter['xpath']),
+          'selector' => $crawler->filter($filter['selector']),
+          // If the filter type is not supported, throw an exception.
+          default => throw new \InvalidArgumentException(
+            "Unsupported filter type: $filterType." .
+            "Supported filter types are: xpath, selector."
+          ),
+        };
+
+        $row->setSourceProperty($fieldName, match ($multiple) {
+          true => $filter->each(function (Crawler $parentCrawler) use ($keyVal, $methodGet) : array {
+            return [
+              $keyVal => $parentCrawler->$methodGet(),
+            ];
+          }),
+          false => $filter->$methodGet(),
+          default => throw new \InvalidArgumentException(
+            "Unsupported multiple flag: $multiple." .
+            "Supported multiple flag is either: true, false."
+          ),
+        });
+      } catch (\InvalidArgumentException $e) {
+        \Drupal::logger('migrate_source_scraper')->error($e->getMessage());
+      }
+    }
   }
 
   /**
