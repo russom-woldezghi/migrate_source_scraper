@@ -113,7 +113,7 @@ class MigratePhpScraper extends SourcePluginBase {
           'xpath' => $crawler->filterXPath($filter['xpath']),
           'selector' => $crawler->filter($filter['selector']),
           // If the filter type is not supported, throw an exception.
-          default => throw new \InvalidArgumentException(
+          default => throw new PluginErrorException(
             "Unsupported filter type: $filterType." .
             "Supported filter types are: xpath, selector."
           ),
@@ -126,7 +126,7 @@ class MigratePhpScraper extends SourcePluginBase {
             ];
           }),
           false => $filter->$methodGet(),
-          default => throw new \InvalidArgumentException(
+          default => throw new PluginErrorException(
             "Unsupported multiple flag: $multiple." .
             "Supported multiple flag is either: true, false."
           ),
