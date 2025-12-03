@@ -15,11 +15,5 @@
         "issues": "https://drupal.org/project/issues/migrate_source_scraper",
         "source": "https://git.drupalcode.org/project/migrate_source_scraper"
     },
-    "require": {
-        "symfony/browser-kit": "^7.4",
-        "symfony/dom-crawler": "^5.4 || ^6 || 6.4.25",
-        "symfony/http-client": "^5.4 || ^6",
-        "symfony/css-selector": "^5.4 || ^6"
-    },
     "minimum-stability": "dev"
 }
